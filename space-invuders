@@ -1,0 +1,99 @@
+# Pygame шаблон - скелет для нового проекта Pygame
+import pygame
+import random
+
+from pygame import *
+import sys
+from os.path import abspath, dirname
+from random import choice
+
+BASE_PATH = abspath(dirname(__file__))
+IMAGE_PATH = BASE_PATH + '/images/'
+
+
+WIDTH = 360
+HEIGHT = 480
+FPS = 30
+# Задаем цвета
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (241, 255, 0)
+# Создаем игру и окно
+pygame.init()
+pygame.mixer.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("My Game")
+clock = pygame.time.Clock()
+# Цикл игры
+running = True
+while running:
+    # Держим цикл на правильной скорости
+    clock.tick(FPS)
+
+    IMG_NAMES = ['ship', 'mystery',
+                 'enemy1_1', 'enemy1_2',
+                 'enemy2_1', 'enemy2_2',
+                 'enemy3_1', 'enemy3_2',
+                 'explosionblue', 'explosiongreen', 'explosionpurple',
+                 'laser', 'enemylaser']
+    IMAGES = {name: image.load(IMAGE_PATH + '{}.png'.format(name)).convert_alpha()
+              for name in IMG_NAMES}
+
+    BLOCKERS_POSITION = 450
+    ENEMY_DEFAULT_POSITION = 65  # Initial value for a new game
+    ENEMY_MOVE_DOWN = 35
+
+    class Ship(sprite.Sprite):
+        def __init__(self):
+            sprite.Sprite.__init__(self)
+            self.image = IMAGES['ship']
+            self.rect = self.image.get_rect(topleft=(375, 540))
+            self.speed = 5
+
+        def update(self, keys, *args):
+            if keys[K_LEFT] and self.rect.x > 10:
+                self.rect.x -= self.speed
+            if keys[K_RIGHT] and self.rect.x < 740:
+                self.rect.x += self.speed
+            pygame.screen.blit(self.image, self.rect)
+
+
+    class Bullet(sprite.Sprite):
+        def __init__(self, xpos, ypos, direction, speed, filename, side):
+            sprite.Sprite.__init__(self)
+            self.image = IMAGES[filename]
+            self.rect = self.image.get_rect(topleft=(xpos, ypos))
+            self.speed = speed
+            self.direction = direction
+            self.side = side
+            self.filename = filename
+
+        def update(self, keys, *args):
+            pygame.screen.blit(self.image, self.rect)
+            self.rect.y += self.speed * self.direction
+            if self.rect.y < 15 or self.rect.y > 600:
+                self.kill()
+
+
+    class Enemy(sprite.Sprite):
+        def __init__(self, row, column):
+            sprite.Sprite.__init__(self)
+            self.row = row
+            self.column = column
+            self.images = []
+            self.load_images()
+            self.index = 0
+            self.image = self.images[self.index]
+            self.rect = self.image.get_rect()
+
+
+    # Ввод процесса (события)
+    for event in pygame.event.get():
+        # check for closing window
+        if event.type == pygame.QUIT:
+            running = False
+
+pygame.quit()
